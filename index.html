@@ -1,0 +1,1069 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gemini AI Studio</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #4F46E5;
+            --primary-hover: #4338CA;
+            --background: #F9FAFB;
+            --card-bg: #FFFFFF;
+            --text: #111827;
+            --text-secondary: #6B7280;
+            --border: #E5E7EB;
+            --success: #10B981;
+            --error: #EF4444;
+            --shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            --shadow-hover: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--background);
+            color: var(--text);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* Three.js Canvas Background */
+        #canvas-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        /* Main Layout */
+        .app-container {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Sidebar Navigation */
+        .sidebar {
+            width: 280px;
+            background: var(--card-bg);
+            border-right: 1px solid var(--border);
+            padding: 32px 24px;
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+            transition: transform 0.3s ease;
+        }
+
+        .sidebar-header {
+            margin-bottom: 40px;
+        }
+
+        .sidebar-header h1 {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 8px;
+        }
+
+        .sidebar-header p {
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+
+        .nav-menu {
+            list-style: none;
+        }
+
+        .nav-item {
+            margin-bottom: 8px;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            padding: 12px 16px;
+            border-radius: 8px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+
+        .nav-link:hover {
+            background: var(--background);
+            color: var(--text);
+        }
+
+        .nav-link.active {
+            background: var(--primary);
+            color: white;
+        }
+
+        .nav-link i {
+            margin-right: 12px;
+            width: 20px;
+            text-align: center;
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            margin-left: 280px;
+            padding: 40px;
+            min-height: 100vh;
+        }
+
+        /* Page Sections */
+        .page {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .page.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Cards */
+        .card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 32px;
+            box-shadow: var(--shadow);
+            transition: box-shadow 0.2s ease;
+            margin-bottom: 24px;
+        }
+
+        .card:hover {
+            box-shadow: var(--shadow-hover);
+        }
+
+        .card-title {
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 16px;
+        }
+
+        /* Dashboard Stats */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 24px;
+            margin-bottom: 32px;
+        }
+
+        .stat-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: var(--shadow);
+        }
+
+        .stat-card h3 {
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+        }
+
+        .stat-card p {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--text);
+        }
+
+        /* Upload Area */
+        .upload-area {
+            border: 2px dashed var(--border);
+            border-radius: 12px;
+            padding: 48px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            margin-bottom: 24px;
+        }
+
+        .upload-area:hover {
+            border-color: var(--primary);
+            background: rgba(79, 70, 229, 0.05);
+        }
+
+        .upload-area.dragover {
+            border-color: var(--primary);
+            background: rgba(79, 70, 229, 0.1);
+        }
+
+        .upload-icon {
+            font-size: 48px;
+            color: var(--primary);
+            margin-bottom: 16px;
+        }
+
+        .upload-area h3 {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .upload-area p {
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+
+        #file-input {
+            display: none;
+        }
+
+        /* Image Preview */
+        .image-preview {
+            display: none;
+            margin-bottom: 24px;
+        }
+
+        .image-preview.active {
+            display: block;
+        }
+
+        .preview-image {
+            max-width: 100%;
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+        }
+
+        /* Buttons */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: none;
+            text-decoration: none;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            background: var(--primary-hover);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text);
+        }
+
+        .btn-outline:hover {
+            background: var(--background);
+        }
+
+        .btn i {
+            margin-right: 8px;
+        }
+
+        .btn.loading i {
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Analysis Results */
+        .analysis-results {
+            display: none;
+            margin-top: 24px;
+        }
+
+        .analysis-results.active {
+            display: block;
+        }
+
+        .results-content {
+            line-height: 1.8;
+        }
+
+        .results-content h1 {
+            font-size: 28px;
+            margin-top: 24px;
+            margin-bottom: 12px;
+        }
+
+        .results-content h2 {
+            font-size: 24px;
+            margin-top: 20px;
+            margin-bottom: 10px;
+        }
+
+        .results-content h3 {
+            font-size: 20px;
+            margin-top: 16px;
+            margin-bottom: 8px;
+        }
+
+        .results-content ul {
+            margin-left: 24px;
+            margin-bottom: 16px;
+        }
+
+        .results-content li {
+            margin-bottom: 8px;
+        }
+
+        .results-content strong {
+            font-weight: 600;
+            color: var(--text);
+        }
+
+        .results-content em {
+            font-style: italic;
+            color: var(--text-secondary);
+        }
+
+        /* Chat Interface */
+        .chat-container {
+            display: flex;
+            flex-direction: column;
+            height: calc(100vh - 140px);
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 24px;
+            background: var(--background);
+            border-radius: 12px;
+            margin-bottom: 16px;
+        }
+
+        .message {
+            margin-bottom: 16px;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .message-user {
+            text-align: right;
+        }
+
+        .message-bubble {
+            display: inline-block;
+            max-width: 70%;
+            padding: 12px 16px;
+            border-radius: 12px;
+            word-wrap: break-word;
+        }
+
+        .message-user .message-bubble {
+            background: var(--primary);
+            color: white;
+            border-bottom-right-radius: 4px;
+        }
+
+        .message-bot .message-bubble {
+            background: var(--card-bg);
+            color: var(--text);
+            border: 1px solid var(--border);
+            border-bottom-left-radius: 4px;
+        }
+
+        .welcome-message {
+            text-align: center;
+            padding: 48px;
+            color: var(--text-secondary);
+        }
+
+        .welcome-message i {
+            font-size: 64px;
+            margin-bottom: 16px;
+            color: var(--primary);
+        }
+
+        /* Chat Input */
+        .chat-input-area {
+            display: flex;
+            gap: 12px;
+        }
+
+        .chat-input {
+            flex: 1;
+            padding: 12px 16px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: 'Inter', sans-serif;
+            transition: border-color 0.2s ease;
+        }
+
+        .chat-input:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        /* Alert Messages */
+        .alert {
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .alert i {
+            margin-right: 12px;
+            font-size: 20px;
+        }
+
+        .alert-error {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid var(--error);
+            color: var(--error);
+        }
+
+        .alert-success {
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid var(--success);
+            color: var(--success);
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1024px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.mobile-open {
+                transform: translateX(0);
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                padding: 24px 16px;
+            }
+
+            .card {
+                padding: 24px;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .message-bubble {
+                max-width: 85%;
+            }
+
+            .upload-area {
+                padding: 32px 16px;
+            }
+        }
+
+        /* Scrollbar Styling */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--background);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-secondary);
+        }
+    </style>
+</head>
+<body>
+    <!-- Three.js Canvas Container -->
+    <div id="canvas-container"></div>
+
+    <div class="app-container">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h1><i class="fas fa-sparkles"></i> Gemini AI</h1>
+                <p>Powered by Google Gemini 2.5 Flash</p>
+            </div>
+            <nav>
+                <ul class="nav-menu">
+                    <li class="nav-item">
+                        <a class="nav-link active" data-page="dashboard">
+                            <i class="fas fa-home"></i>
+                            Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" data-page="image-analysis">
+                            <i class="fas fa-image"></i>
+                            Image Analysis
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" data-page="chat">
+                            <i class="fas fa-comments"></i>
+                            Chat Assistant
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <!-- Dashboard Page -->
+            <div id="dashboard" class="page active">
+                <h2 style="font-size: 32px; font-weight: 700; margin-bottom: 24px;">Dashboard</h2>
+                
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <h3>Images Analyzed</h3>
+                        <p id="images-count">0</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Chat Messages</h3>
+                        <p id="messages-count">0</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Total Requests</h3>
+                        <p id="total-requests">0</p>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3 class="card-title">Welcome to Gemini AI Studio</h3>
+                    <p style="color: var(--text-secondary); margin-bottom: 16px;">
+                        Harness the power of Google's Gemini 2.5 Flash model for advanced AI capabilities.
+                    </p>
+                    <ul style="margin-left: 24px; color: var(--text-secondary);">
+                        <li>🖼️ <strong>Image Analysis:</strong> Upload images to get detailed descriptions, object detection, and insights</li>
+                        <li>💬 <strong>Chat Assistant:</strong> Have natural conversations with AI powered by advanced language understanding</li>
+                        <li>⚡ <strong>Fast Processing:</strong> Lightning-quick responses powered by Gemini 2.5 Flash</li>
+                        <li>🎨 <strong>Beautiful UI:</strong> Smooth animations with Three.js and Lenis smooth scrolling</li>
+                    </ul>
+                </div>
+
+                <div class="card">
+                    <h3 class="card-title">Quick Start</h3>
+                    <p style="color: var(--text-secondary); margin-bottom: 16px;">
+                        Get started with one of these features:
+                    </p>
+                    <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+                        <button class="btn btn-primary" onclick="navigateToPage('image-analysis')">
+                            <i class="fas fa-image"></i>
+                            Analyze Image
+                        </button>
+                        <button class="btn btn-outline" onclick="navigateToPage('chat')">
+                            <i class="fas fa-comments"></i>
+                            Start Chat
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Image Analysis Page -->
+            <div id="image-analysis" class="page">
+                <h2 style="font-size: 32px; font-weight: 700; margin-bottom: 24px;">Image Analysis</h2>
+                
+                <div class="card">
+                    <div class="upload-area" id="upload-area">
+                        <i class="fas fa-cloud-upload-alt upload-icon"></i>
+                        <h3>Upload Image</h3>
+                        <p>Click to browse or drag and drop</p>
+                        <p style="font-size: 12px; margin-top: 8px;">Supported: JPG, PNG, JPEG</p>
+                    </div>
+                    <input type="file" id="file-input" accept=".jpg,.jpeg,.png">
+
+                    <div class="image-preview" id="image-preview">
+                        <img id="preview-img" class="preview-image" alt="Preview">
+                    </div>
+
+                    <button class="btn btn-primary" id="analyze-btn" style="width: 100%;" disabled>
+                        <i class="fas fa-search"></i>
+                        Analyze Image
+                    </button>
+
+                    <div class="analysis-results" id="analysis-results">
+                        <h3 class="card-title">Analysis Results</h3>
+                        <div class="results-content" id="results-content"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Chat Page -->
+            <div id="chat" class="page">
+                <h2 style="font-size: 32px; font-weight: 700; margin-bottom: 24px;">Chat Assistant</h2>
+                
+                <div class="card">
+                    <div class="chat-container">
+                        <div class="chat-messages" id="chat-messages">
+                            <div class="welcome-message" id="welcome-message">
+                                <i class="fas fa-robot"></i>
+                                <h3>Start a conversation</h3>
+                                <p>Ask me anything, and I'll help you!</p>
+                            </div>
+                        </div>
+                        <div class="chat-input-area">
+                            <input 
+                                type="text" 
+                                class="chat-input" 
+                                id="chat-input" 
+                                placeholder="Type your message..."
+                                autocomplete="off"
+                            >
+                            <button class="btn btn-primary" id="send-btn">
+                                <i class="fas fa-paper-plane"></i>
+                                Send
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Three.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <!-- Lenis Smooth Scroll -->
+    <script src="https://unpkg.com/lenis@1.1.20/dist/lenis.min.js"></script>
+
+    <script>
+        // ================== CONSTANTS ==================
+        const API_KEY = 'AIzaSyDb1QUZy2xMGz11smB6oQDLc1Kk5XRWfIc';
+        const API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent';
+
+        // ================== STATE ==================
+        let stats = {
+            images: 0,
+            messages: 0,
+            total: 0
+        };
+
+        let currentImageBase64 = null;
+
+        // ================== THREE.JS PARTICLE BACKGROUND ==================
+        function initThreeJS() {
+            const container = document.getElementById('canvas-container');
+            
+            // Scene setup
+            const scene = new THREE.Scene();
+            const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+            
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            container.appendChild(renderer.domElement);
+
+            // Create particles (200 particles for subtlety)
+            const particleCount = 200;
+            const geometry = new THREE.BufferGeometry();
+            const positions = new Float32Array(particleCount * 3);
+
+            for (let i = 0; i < particleCount * 3; i++) {
+                positions[i] = (Math.random() - 0.5) * 10;
+            }
+
+            geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+
+            const material = new THREE.PointsMaterial({
+                color: 0x4F46E5,
+                size: 0.08,
+                opacity: 0.3,
+                transparent: true,
+                sizeAttenuation: true
+            });
+
+            const particles = new THREE.Points(geometry, material);
+            scene.add(particles);
+
+            camera.position.z = 5;
+
+            // Animation
+            function animate() {
+                requestAnimationFrame(animate);
+                
+                particles.rotation.y += 0.0003;
+                particles.rotation.x += 0.0001;
+                
+                renderer.render(scene, camera);
+            }
+
+            animate();
+
+            // Handle window resize
+            window.addEventListener('resize', () => {
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(window.innerWidth, window.innerHeight);
+            });
+        }
+
+        // ================== LENIS SMOOTH SCROLL ==================
+        function initLenis() {
+            const lenis = new Lenis({
+                lerp: 0.05,
+                wheelMultiplier: 1,
+                smooth: true
+            });
+
+            function raf(time) {
+                lenis.raf(time);
+                requestAnimationFrame(raf);
+            }
+
+            requestAnimationFrame(raf);
+        }
+
+        // ================== NAVIGATION ==================
+        function navigateToPage(pageId) {
+            // Update active states
+            document.querySelectorAll('.page').forEach(page => page.classList.remove('active'));
+            document.querySelectorAll('.nav-link').forEach(link => link.classList.remove('active'));
+            
+            // Show selected page
+            document.getElementById(pageId).classList.add('active');
+            document.querySelector(`[data-page="${pageId}"]`).classList.add('active');
+        }
+
+        // ================== MARKDOWN TO HTML CONVERTER ==================
+        function markdownToHTML(text) {
+            let html = text;
+
+            // Headers
+            html = html.replace(/^### (.*$)/gim, '<h3>$1</h3>');
+            html = html.replace(/^## (.*$)/gim, '<h2>$1</h2>');
+            html = html.replace(/^# (.*$)/gim, '<h1>$1</h1>');
+
+            // Bold
+            html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+            html = html.replace(/__(.*?)__/g, '<strong>$1</strong>');
+
+            // Italic
+            html = html.replace(/\*(.*?)\*/g, '<em>$1</em>');
+            html = html.replace(/_(.*?)_/g, '<em>$1</em>');
+
+            // Lists
+            html = html.replace(/^\- (.*$)/gim, '<li>$1</li>');
+            html = html.replace(/^\* (.*$)/gim, '<li>$1</li>');
+            html = html.replace(/(<li>.*<\/li>)/s, '<ul>$1</ul>');
+
+            // Line breaks
+            html = html.replace(/\n\n/g, '<br><br>');
+            html = html.replace(/\n/g, '<br>');
+
+            return html;
+        }
+
+        // ================== IMAGE ANALYSIS ==================
+        const uploadArea = document.getElementById('upload-area');
+        const fileInput = document.getElementById('file-input');
+        const imagePreview = document.getElementById('image-preview');
+        const previewImg = document.getElementById('preview-img');
+        const analyzeBtn = document.getElementById('analyze-btn');
+        const analysisResults = document.getElementById('analysis-results');
+        const resultsContent = document.getElementById('results-content');
+
+        // Click to upload
+        uploadArea.addEventListener('click', () => fileInput.click());
+
+        // Drag and drop
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragover');
+        });
+
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            const file = e.dataTransfer.files[0];
+            handleFile(file);
+        });
+
+        // File input change
+        fileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            handleFile(file);
+        });
+
+        function handleFile(file) {
+            if (!file) return;
+
+            // Validate file type
+            const validTypes = ['image/jpeg', 'image/jpg', 'image/png'];
+            if (!validTypes.includes(file.type)) {
+                showAlert('Please upload a JPG, JPEG, or PNG image.', 'error');
+                return;
+            }
+
+            // Read file and convert to base64
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const base64 = e.target.result.split(',')[1];
+                currentImageBase64 = base64;
+                
+                // Show preview
+                previewImg.src = e.target.result;
+                imagePreview.classList.add('active');
+                analyzeBtn.disabled = false;
+                analysisResults.classList.remove('active');
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // Analyze button
+        analyzeBtn.addEventListener('click', async () => {
+            if (!currentImageBase64) return;
+
+            analyzeBtn.disabled = true;
+            analyzeBtn.innerHTML = '<i class="fas fa-spinner loading"></i> Analyzing...';
+            analysisResults.classList.remove('active');
+
+            try {
+                const response = await fetch(`${API_URL}?key=${API_KEY}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        contents: [{
+                            parts: [
+                                { text: "Analyze this image in detail. Describe what you see, identify objects, people, activities, and provide insights." },
+                                {
+                                    inline_data: {
+                                        mime_type: "image/jpeg",
+                                        data: currentImageBase64
+                                    }
+                                }
+                            ]
+                        }]
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.candidates && data.candidates[0]) {
+                    const result = data.candidates[0].content.parts[0].text;
+                    resultsContent.innerHTML = markdownToHTML(result);
+                    analysisResults.classList.add('active');
+                    
+                    // Update stats
+                    stats.images++;
+                    stats.total++;
+                    updateStats();
+
+                    // Scroll to results
+                    setTimeout(() => {
+                        analysisResults.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }, 100);
+                } else {
+                    showAlert('Failed to analyze image. Please try again.', 'error');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showAlert('Network error. Please check your connection and try again.', 'error');
+            } finally {
+                analyzeBtn.disabled = false;
+                analyzeBtn.innerHTML = '<i class="fas fa-search"></i> Analyze Image';
+            }
+        });
+
+        // ================== CHAT INTERFACE ==================
+        const chatMessages = document.getElementById('chat-messages');
+        const chatInput = document.getElementById('chat-input');
+        const sendBtn = document.getElementById('send-btn');
+        const welcomeMessage = document.getElementById('welcome-message');
+
+        // Send message
+        async function sendMessage() {
+            const message = chatInput.value.trim();
+            if (!message) return;
+
+            // Remove welcome message on first interaction
+            if (welcomeMessage) {
+                welcomeMessage.remove();
+            }
+
+            // Add user message
+            addMessage(message, 'user');
+            chatInput.value = '';
+
+            // Disable input during processing
+            sendBtn.disabled = true;
+            chatInput.disabled = true;
+            sendBtn.innerHTML = '<i class="fas fa-spinner loading"></i> Thinking...';
+
+            try {
+                const response = await fetch(`${API_URL}?key=${API_KEY}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        contents: [{
+                            parts: [{ text: message }]
+                        }]
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.candidates && data.candidates[0]) {
+                    const result = data.candidates[0].content.parts[0].text;
+                    
+                    // Add bot response with slight delay for better UX
+                    setTimeout(() => {
+                        addMessage(result, 'bot');
+                        
+                        // Update stats
+                        stats.messages += 2; // User + Bot
+                        stats.total++;
+                        updateStats();
+                    }, 300);
+                } else {
+                    showAlert('Failed to get response. Please try again.', 'error');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showAlert('Network error. Please check your connection and try again.', 'error');
+            } finally {
+                sendBtn.disabled = false;
+                chatInput.disabled = false;
+                sendBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Send';
+                chatInput.focus();
+            }
+        }
+
+        function addMessage(text, type) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message message-${type}`;
+            
+            const bubbleDiv = document.createElement('div');
+            bubbleDiv.className = 'message-bubble';
+            bubbleDiv.innerHTML = type === 'bot' ? markdownToHTML(text) : text;
+            
+            messageDiv.appendChild(bubbleDiv);
+            chatMessages.appendChild(messageDiv);
+
+            // Auto scroll to latest message
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        // Send button click
+        sendBtn.addEventListener('click', sendMessage);
+
+        // Enter key to send
+        chatInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+
+        // ================== UTILITY FUNCTIONS ==================
+        function showAlert(message, type) {
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-${type}`;
+            alertDiv.innerHTML = `
+                <i class="fas fa-${type === 'error' ? 'exclamation-circle' : 'check-circle'}"></i>
+                <span>${message}</span>
+            `;
+
+            const activePage = document.querySelector('.page.active .card');
+            activePage.insertBefore(alertDiv, activePage.firstChild);
+
+            // Remove after 5 seconds
+            setTimeout(() => alertDiv.remove(), 5000);
+        }
+
+        function updateStats() {
+            document.getElementById('images-count').textContent = stats.images;
+            document.getElementById('messages-count').textContent = stats.messages;
+            document.getElementById('total-requests').textContent = stats.total;
+        }
+
+        // ================== INITIALIZATION ==================
+        document.addEventListener('DOMContentLoaded', () => {
+            // Initialize Three.js and Lenis
+            initThreeJS();
+            initLenis();
+
+            // Navigation event listeners
+            document.querySelectorAll('.nav-link').forEach(link => {
+                link.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const pageId = link.getAttribute('data-page');
+                    navigateToPage(pageId);
+                });
+            });
+        });
+    </script>
+</body>
+</html>
